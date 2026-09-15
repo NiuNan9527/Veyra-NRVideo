@@ -39,7 +39,7 @@ if ($filters -notmatch "ddagrab") {
 
 $rate = "$($BitrateMbps)M"
 $buffer = "2M"
-$url = "udp://$($TargetIp):$($Port)?pkt_size=1316&buffer_size=262144"
+$url = "udp://$($TargetIp):$($Port)?pkt_size=1316&buffer_size=1048576"
 
 Write-Host ""
 Write-Host "Veyra LAN sender"
