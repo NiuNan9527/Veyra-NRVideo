@@ -41,9 +41,8 @@ bool FFmpegDemuxer::open(const std::wstring& path)
         // decoded-frame mailbox still owns freshness; these options prevent
         // libavformat from adding a large hidden queue before decode.
         av_dict_set(&openOptions, "fflags", "nobuffer", 0);
-        av_dict_set(&openOptions, "avioflags", "direct", 0);
-        av_dict_set(&openOptions, "probesize", "262144", 0);
-        av_dict_set(&openOptions, "analyzeduration", "250000", 0);
+        av_dict_set(&openOptions, "probesize", "1048576", 0);
+        av_dict_set(&openOptions, "analyzeduration", "500000", 0);
         av_dict_set(&openOptions, "rw_timeout", "2000000", 0);
     }
     const int openResult = avformat_open_input(&raw, utf8Path.c_str(), nullptr, &openOptions);
