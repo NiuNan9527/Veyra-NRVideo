@@ -1,0 +1,1 @@
+@echo off\r\nsetlocal\r\nset "PORT=5000"\r\nset "VEYRA=C:\\Users\\Administrator\\Desktop\\DLSS\\Veyra.exe"\r\nif not exist "%VEYRA%" (\r\n  echo [Veyra TCP] Veyra.exe not found at %VEYRA%\r\n  pause\r\n  exit /b 1\r\n)\r\necho [Veyra TCP] Listening on TCP port %PORT%...\r\nstart "" "%VEYRA%" "tcp://0.0.0.0:%PORT%?listen=1&tcp_nodelay=1&listen_timeout=10000"\r\nendlocal
