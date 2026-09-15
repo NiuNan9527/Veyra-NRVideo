@@ -29,7 +29,7 @@ The first hardware-test transport is MPEG-TS over UDP.
 Receiver URL:
 
 ```
-udp://0.0.0.0:5000?fifo_size=2048&overrun_nonfatal=1&buffer_size=1048576
+udp://0.0.0.0:5000?fifo_size=8192&overrun_nonfatal=1&buffer_size=4194304
 ```
 
 Sender target:
@@ -39,8 +39,8 @@ Sender target:
 - ultra-low-latency usage
 - no B-frames
 - async depth 1
-- initial 120 Mbps
-- one-second GOP
+- initial 80 Mbps for stability A/B; raise after packet-loss-free baseline
+- half-second GOP for faster recovery from a damaged UDP frame
 - MPEG-TS packets sized for UDP
 
 ## Evidence boundary
