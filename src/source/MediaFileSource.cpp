@@ -1,5 +1,6 @@
 #include "veyra/source/MediaFileSource.h"
 #include "veyra/pipeline/ColorMetadata.h"
+#include "veyra/media/InputUrl.h"
 
 #include <climits>
 #include <cstddef>
@@ -162,7 +163,8 @@ bool MediaFileSource::open(const SourceOpenDesc& desc)
 
     info_ = SourceInfo{};
     info_.opened = true;
-    info_.kind = pipeline::SourceKind::File;
+    info_.kind = media::isRealtimeNetworkUrl(desc.path)
+        ? pipeline::SourceKind::LanStream : pipeline::SourceKind::File;
     info_.width = static_cast<uint32_t>(decoder_.width());
     info_.height = static_cast<uint32_t>(decoder_.height());
     const int64_t durUs = demuxer_.durationUs();
@@ -297,7 +299,7 @@ SourceReadStatus MediaFileSource::read(pipeline::FramePacket& out, const AVFrame
     } else {
         out.duration = pipeline::Rational::unknown();
     }
-    out.sourceKind = pipeline::SourceKind::File;
+    out.sourceKind = info_.kind;
     out.colorInfo = pipeline::resolveFrameColor(*frame,info_.color);
     auto& dv=info_.dolbyVision;
     const bool hasRpu=av_frame_get_side_data(frame,AV_FRAME_DATA_DOVI_METADATA)||av_frame_get_side_data(frame,AV_FRAME_DATA_DOVI_RPU_BUFFER);
