@@ -1,5 +1,5 @@
 param(
-    [string]$TargetIp = "",
+    [string]$TargetIp = "192.168.163.252",
     [int]$Port = 5000,
     [int]$BitrateMbps = 120,
     [int]$OutputIndex = 0,
