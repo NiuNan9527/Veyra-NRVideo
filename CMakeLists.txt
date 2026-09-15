@@ -373,6 +373,16 @@ if(VEYRA_FFMPEG_ROOT AND EXISTS "${VEYRA_FFMPEG_ROOT}/include/libavformat/avform
   target_link_directories(veyra_media PUBLIC ${FFMPEG_LIBRARY_DIRS})
   target_link_libraries(veyra_media PUBLIC ${FFMPEG_LIBRARIES})
 
+  add_executable(veyra_lan_timing_probe
+    tools/lan_timing_probe/main.cpp
+  )
+  veyra_apply_warnings(veyra_lan_timing_probe)
+  target_compile_options(veyra_lan_timing_probe PRIVATE /WX-)
+  target_compile_features(veyra_lan_timing_probe PRIVATE cxx_std_20)
+  target_compile_definitions(veyra_lan_timing_probe PRIVATE
+    UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+  target_link_libraries(veyra_lan_timing_probe PRIVATE veyra_media veyra_gfx)
+
   add_executable(veyra_media_probe
     tools/media_probe/main.cpp
     tools/nr_harness/harness_util.cpp
