@@ -10,6 +10,7 @@ extern "C" {
 #include <format>
 
 #include "veyra/Log.h"
+#include "veyra/media/InputUrl.h"
 
 namespace veyra::media {
 
@@ -32,7 +33,19 @@ bool FFmpegDemuxer::open(const std::wstring& path)
         WideCharToMultiByte(CP_UTF8, 0, path.c_str(), static_cast<int>(path.size()), utf8Path.data(), size, nullptr, nullptr);
     }
     AVFormatContext* raw = nullptr;
-    const int openResult = avformat_open_input(&raw, utf8Path.c_str(), nullptr, nullptr);
+    AVDictionary* openOptions = nullptr;
+    if (isRealtimeNetworkUrl(utf8Path)) {
+        // Realtime LAN input: keep demux buffering and probe bounded. The
+        // decoded-frame mailbox still owns freshness; these options prevent
+        // libavformat from adding a large hidden queue before decode.
+        av_dict_set(&openOptions, "fflags", "nobuffer", 0);
+        av_dict_set(&openOptions, "avioflags", "direct", 0);
+        av_dict_set(&openOptions, "probesize", "262144", 0);
+        av_dict_set(&openOptions, "analyzeduration", "250000", 0);
+        av_dict_set(&openOptions, "rw_timeout", "2000000", 0);
+    }
+    const int openResult = avformat_open_input(&raw, utf8Path.c_str(), nullptr, &openOptions);
+    av_dict_free(&openOptions);
     if (openResult < 0) {
         char errorText[AV_ERROR_MAX_STRING_SIZE]{};
         av_strerror(openResult, errorText, sizeof(errorText));
