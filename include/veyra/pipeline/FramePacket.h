@@ -41,9 +41,9 @@ enum class SourceKind : uint8_t {
     File,         // FFmpeg demux/decode (player, export)
     CaptureCard,  // physical DirectShow/UVC capture
     RemotePlay,   // PS5 Remote Play stream (Chiaki transport)
-    LanStream,    // PC-to-PC realtime LAN stream (FFmpeg transport)
     Image,        // WIC single image
     TestPattern,  // synthetic harness input
+    LanStream,    // PC-to-PC realtime LAN stream (FFmpeg transport)
 };
 
 inline const char* sourceKindName(SourceKind k) {
