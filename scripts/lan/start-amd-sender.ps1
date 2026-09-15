@@ -38,8 +38,7 @@ if ($filters -notmatch "ddagrab") {
 }
 
 $rate = "$($BitrateMbps)M"
-$bufferMbps = [Math]::Max(8, [Math]::Round($BitrateMbps / 6))
-$buffer = "$($bufferMbps)M"
+$buffer = "2M"
 $url = "udp://$($TargetIp):$($Port)?pkt_size=1316&buffer_size=262144"
 
 Write-Host ""
@@ -59,6 +58,10 @@ $args = @(
     "-c:v", "hevc_amf",
     "-usage", "ultralowlatency",
     "-quality", "speed",
+    "-latency", "1",
+    "-preanalysis", "0",
+    "-preencode", "0",
+    "-vbaq", "0",
     "-rc", "cbr",
     "-b:v", $rate,
     "-maxrate", $rate,
