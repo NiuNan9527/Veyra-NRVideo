@@ -54,7 +54,7 @@ Write-Host ""
 $args = @(
     "-hide_banner",
     "-loglevel", "warning",
-    "-filter_complex", "ddagrab=output_idx=$($OutputIndex):framerate=$($Fps):draw_mouse=1",
+    "-filter_complex", "ddagrab=output_idx=$($OutputIndex):framerate=$($Fps):draw_mouse=1,setpts=N/($($Fps)*TB)",
     "-an",
     "-c:v", "hevc_amf",
     "-usage", "ultralowlatency",
