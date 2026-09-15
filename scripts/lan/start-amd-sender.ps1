@@ -1,7 +1,7 @@
 param(
     [string]$TargetIp = "192.168.163.252",
     [int]$Port = 5000,
-    [int]$BitrateMbps = 120,
+    [int]$BitrateMbps = 80,
     [int]$OutputIndex = 0,
     [int]$Fps = 60
 )
@@ -66,7 +66,7 @@ $args = @(
     "-b:v", $rate,
     "-maxrate", $rate,
     "-bufsize", $buffer,
-    "-g", "$Fps",
+    "-g", "$([Math]::Max(15, [Math]::Round($Fps / 2)))",
     "-bf", "0",
     "-async_depth", "1",
     "-header_insertion_mode", "idr",
