@@ -14,7 +14,9 @@
 #include "veyra/engine/RealtimePreviewScheduling.h"
 #include "veyra/engine/CaptureHalfRate.h"
 #include "veyra/source/MediaFileSource.h"
+#include "veyra/source/LanStreamSource.h"
 #include "veyra/source/CaptureCardSource.h"
+#include "veyra/media/InputUrl.h"
 #ifdef VEYRA_ENABLE_REMOTEPLAY
 #include "veyra/source/RemotePlaySessionSource.h"
 #endif
@@ -118,7 +120,9 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
     gfx::D3D12DeviceContext ctx;gfx::CommandSlotRing ring;source::MediaFileSource source;
     sink::AudioPipeline audioPipe;sink::AudioRenderer audio;VideoPresenter presenter;
     pipeline::EnhanceGraph graph(ctx,ring);AVFrame* imageFrame=nullptr;AVFrame* cachedFrame=nullptr;pipeline::FramePacket cachedPacket;
-    source::CaptureCardSource captureSource;const bool physicalCapture=path.starts_with(L"capture:")||path.starts_with(L"capture2:");
+    source::CaptureCardSource captureSource;source::LanStreamSource lanSource;
+    const bool physicalCapture=path.starts_with(L"capture:")||path.starts_with(L"capture2:");
+    const bool isLan=media::isRealtimeNetworkUrl(path);
 #ifdef VEYRA_ENABLE_REMOTEPLAY
     auto remote=remoteRequest?std::make_shared<source::RemotePlaySessionSource>():nullptr;
     const bool isRemote=bool(remote);
@@ -126,10 +130,10 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
 #else
     (void)remoteRequest;const bool isRemote=false;
 #endif
-    const bool isCapture=physicalCapture||options.captureReplayForTest||isRemote;
-    const bool pairAnchoredLive=physicalCapture||options.captureReplayForTest||isRemote;
+    const bool isCapture=physicalCapture||options.captureReplayForTest||isRemote||isLan;
+    const bool pairAnchoredLive=physicalCapture||options.captureReplayForTest||isRemote||isLan;
     const bool useLiveFgAdmission=!(options.captureReplayForTest&&options.captureReplayDisableFgAdmissionForTest);
-    source::IFrameSource* activeSource=physicalCapture?static_cast<source::IFrameSource*>(&captureSource):&source;
+    source::IFrameSource* activeSource=physicalCapture?static_cast<source::IFrameSource*>(&captureSource):isLan?static_cast<source::IFrameSource*>(&lanSource):static_cast<source::IFrameSource*>(&source);
 #ifdef VEYRA_ENABLE_REMOTEPLAY
     if(remote)activeSource=remote.get();
 #endif
@@ -159,7 +163,7 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
                 // source performs a capability check and falls back to
                 // software before returning its first frame; capture/PS5
                 // retain their own decode contracts.
-                od.preferHardwareDecode=!isCapture;
+                od.preferHardwareDecode=!isCapture||isLan;
                 if(od.preferHardwareDecode){od.d3d12Device=ctx.device();od.d3d12Queue=ctx.directQueue();}
                 // Diagnostic uses the production graph/presenter to validate
                 // D3D12VA imports without needing a paired PS5 or credentials.
@@ -275,7 +279,7 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
             captureSource.setAudioSync(unsigned(options.settings.audioSync),options.settings.audioOffsetMs);
             if(physicalCapture&&!captureSource.start()){status(L"无法启动采集，请查看诊断",true);break;}
             {std::lock_guard lock(mutex_);snapshot_.duration=duration;snapshot_.nominalSourceFps=isImage?0:activeSource->info().averageFps;snapshot_.running=true;snapshot_.transport=TransportState::Playing;snapshot_.image=isImage;snapshot_.capture=isCapture;snapshot_.applied=options.snapshot();snapshot_.desired=desired_;}
-            status(isImage?L"图片已增强，可保存PNG/JPEG":std::format(L"{} | 输入 {}×{} / 底图 {}×{} / NR {}×{} / 光流 {}×{} / FG与输出 {}×{} | {}",isRemote?L"PS5 串流":isCapture?L"实时采集":L"播放",width,height,gd.workWidth,gd.workHeight,gd.nrWidth,gd.nrHeight,gd.flowWidth,gd.flowHeight,gd.workWidth,gd.workHeight,gd.nrBeforeSr?L"低延迟 · NR先行后超分":gd.nrWidth<gd.workWidth?L"实时内部处理并回填":L"原生NR（性能成本较高）"));
+            status(isImage?L"图片已增强，可保存PNG/JPEG":std::format(L"{} | 输入 {}×{} / 底图 {}×{} / NR {}×{} / 光流 {}×{} / FG与输出 {}×{} | {}",isRemote?L"PS5 串流":isLan?L"PC 局域网串流":isCapture?L"实时采集":L"播放",width,height,gd.workWidth,gd.workHeight,gd.nrWidth,gd.nrHeight,gd.flowWidth,gd.flowHeight,gd.workWidth,gd.workHeight,gd.nrBeforeSr?L"低延迟 · NR先行后超分":gd.nrWidth<gd.workWidth?L"实时内部处理并回填":L"原生NR（性能成本较高）"));
             pipeline::EnhanceGraph::FrameOutputs out;bool reset=true,hasOutput=false,audioRebuffering=false,seekPreviewPending=false;
             bool initialRemoteFramePending=isRemote;
             bool initialFileFramePending=!isImage&&!isCapture;
@@ -883,7 +887,7 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
                     const auto duration100ns=liveSourceInterval100ns(pkt.duration,activeSource->info().averageFps);
                     // File replay has no device pacing and still needs its PTS
                     // clock. Physical capture without FG presents as soon as ready.
-                    const bool paceSourcePts=options.fg||!physicalCapture;
+                    const bool paceSourcePts=options.fg||(!physicalCapture&&!isLan);
                     if(!liveTimeline.anchored(out.batch.identity.epoch)||(pairPacing&&frames==0))veyra::log::info("capture-timeline",std::format("interval100ns={} packetDurationKnown={} packetDurationPositive={} nominalFps={} FG={} pacing={}",duration100ns,!pkt.duration.isUnknown(),pkt.duration.num>0,activeSource->info().averageFps,options.fg,pairAnchoredLive?(isRemote?"decoded-pair":"capture-pair"):paceSourcePts?"source-pts":"capture-ready"));
                     if(pairPacing||isRemote)liveTimeline.resetPair(out.batch.identity.epoch,out.batch.b100ns,liveInputReady,options.fg?duration100ns:0,paceSourcePts);
                     else if(!liveTimeline.anchored(out.batch.identity.epoch))liveTimeline.reset(out.batch.identity.epoch,out.batch.b100ns,liveInputReady,options.fg?duration100ns:0,paceSourcePts);
@@ -1045,6 +1049,7 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
                 if(!paused_&&!isCapture){latenessSamples.push_back(std::abs(lateness));if(latenessSamples.size()>1200)latenessSamples.pop_front();}
                 std::vector<double> sorted(latenessSamples.begin(),latenessSamples.end());std::sort(sorted.begin(),sorted.end());
                 auto captureStats=physicalCapture?captureSource.metrics():source::CaptureMetrics{};
+                if(isLan){const auto lan=lanSource.metrics();captureStats.received=lan.received;captureStats.dropped=lan.dropped;captureStats.delivered=lan.delivered;captureStats.callbackFps=lan.inputFps;captureStats.readAgeMs=lan.readAgeMs;}
 #ifdef VEYRA_ENABLE_REMOTEPLAY
                 if(remote){const auto rp=remote->sessionSnapshot();captureStats.received=rp.video.accessUnits;captureStats.dropped=remote->skipped();captureStats.delivered=sourceFrames;
                     captureStats.readAgeMs=double(std::max<int64_t>(0,host100ns()-pkt.arrivalHost100ns))/10000;
@@ -1114,7 +1119,7 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
     {std::lock_guard lock(mutex_);activeRemote_.reset();}
     if(remote)remote->close();
 #endif
-    audioPipe.stopThread();audio.shutdown();ring.drainQueue();presenter.close();graph.shutdown();captureSource.close();source.close();av_frame_free(&cachedFrame);av_frame_free(&imageFrame);ring.shutdown();ctx.shutdown();
+    audioPipe.stopThread();audio.shutdown();ring.drainQueue();presenter.close();graph.shutdown();captureSource.close();lanSource.close();source.close();av_frame_free(&cachedFrame);av_frame_free(&imageFrame);ring.shutdown();ctx.shutdown();
     {std::lock_guard lock(mutex_);snapshot_.running=false;snapshot_.audioEndpointRecovering=false;snapshot_.audioRebuffering=false;}
     CoUninitialize();
 }
