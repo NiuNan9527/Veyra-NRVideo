@@ -38,10 +38,12 @@ Write-Host "Press Ctrl+C to stop."
     -gops_per_idr 1 `
     -bf 0 `
     -async_depth 1 `
-    -header_insertion_mode gop `
+    -forced_idr 1 `
+    -header_insertion_mode idr `
     -muxdelay 0 `
     -muxpreload 0 `
     -flush_packets 1 `
+    -mpegts_flags +resend_headers `
     -f mpegts `
     $url
 exit $LASTEXITCODE
