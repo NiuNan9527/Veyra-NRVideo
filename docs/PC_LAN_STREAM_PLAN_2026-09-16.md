@@ -29,7 +29,7 @@ The first hardware-test transport is MPEG-TS over UDP.
 Receiver URL:
 
 ```
-udp://0.0.0.0:5000?fifo_size=262144&overrun_nonfatal=1&buffer_size=262144
+udp://0.0.0.0:5000?fifo_size=2048&overrun_nonfatal=1&buffer_size=1048576
 ```
 
 Sender target:
