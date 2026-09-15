@@ -11,5 +11,5 @@ if not exist "%VEYRA%" (
   exit /b 1
 )
 echo [Veyra LAN] Listening on UDP port %PORT%...
-start "" "%VEYRA%" "udp://0.0.0.0:%PORT%?fifo_size=262144&overrun_nonfatal=1&buffer_size=262144"
+start "" "%VEYRA%" "udp://0.0.0.0:%PORT%?fifo_size=2048&overrun_nonfatal=1&buffer_size=1048576"
 endlocal
