@@ -47,7 +47,7 @@ bool LanStreamSource::open(const SourceOpenDesc& desc)
     close();
 
     if (!media::isRealtimeNetworkUrl(desc.path)) {
-        log::error("lan-source", "open rejected: URL must use udp://, rtp://, or srt://");
+        log::error("lan-source", "open rejected: URL must use tcp://, udp://, rtp://, or srt://");
         return false;
     }
 
