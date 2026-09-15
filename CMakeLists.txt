@@ -415,6 +415,7 @@ if(VEYRA_FFMPEG_ROOT AND EXISTS "${VEYRA_FFMPEG_ROOT}/include/libavformat/avform
   add_library(veyra_sources STATIC
     src/source/NativeCaptureSink.cpp
     src/source/MediaFileSource.cpp
+    src/source/LanStreamSource.cpp
     src/source/CaptureCardSource.cpp
     src/source/WasapiAudioInput.cpp
   )
