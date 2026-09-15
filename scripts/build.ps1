@@ -10,6 +10,7 @@ param(
     [string]$ProtocPath,
     [string]$PkgConfigPath,
     [string]$FfmpegRoot,
+    [string]$Target,
     [switch]$Clean
 )
 
@@ -53,6 +54,15 @@ if ([string]::IsNullOrWhiteSpace($cmakeExe)) {
 $vcvars = Join-Path $vsRoot "VC\Auxiliary\Build\vcvars64.bat"
 if (-not (Test-Path -LiteralPath $vcvars -PathType Leaf)) {
     Write-Host "build.ps1: vcvars64.bat not found under $vsRoot"
+    exit 3
+}
+$ninjaExe = Join-Path $vsRoot "Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja\ninja.exe"
+if (-not (Test-Path -LiteralPath $ninjaExe -PathType Leaf)) {
+    $foundNinja = Get-Command ninja -ErrorAction SilentlyContinue
+    if ($null -ne $foundNinja) { $ninjaExe = $foundNinja.Source }
+}
+if (-not (Test-Path -LiteralPath $ninjaExe -PathType Leaf)) {
+    Write-Host "build.ps1: ninja not found"
     exit 3
 }
 
@@ -106,9 +116,10 @@ $batchLines = @(
     ('if errorlevel 1 exit /b 4' -f $null),
     'chcp 65001 >nul',
     ('cd /d "{0}"' -f $Root),
+    ('set "PATH={0};%PATH%"' -f (Split-Path -Parent $ninjaExe)),
     ('"{0}" --preset {1} -B "{2}"{3}' -f $cmakeExe, $Preset, $buildDir, $configureExtra),
     'if errorlevel 1 exit /b 5',
-    ('"{0}" --build "{1}"' -f $cmakeExe, $buildDir),
+    ($(if ($Target) { '"{0}" --build "{1}" --target "{2}"' -f $cmakeExe, $buildDir, $Target } else { '"{0}" --build "{1}"' -f $cmakeExe, $buildDir })),
     'if errorlevel 1 exit /b 6',
     'exit /b 0'
 )
@@ -116,9 +127,12 @@ Set-Content -LiteralPath $batchFile -Value $batchLines -Encoding ASCII
 
 & cmd.exe /c ('"{0}"' -f $batchFile)
 $exitCode = $LASTEXITCODE
-if ($exitCode -eq 0 -and (Test-Path -LiteralPath (Join-Path $buildDir 'veyra.exe'))) {
+if ($exitCode -eq 0 -and (Test-Path -LiteralPath $buildDir -PathType Container)) {
     foreach ($name in @('avcodec-63.dll','avformat-63.dll','avutil-61.dll','swresample-7.dll','swscale-10.dll')) {
-        Copy-Item -LiteralPath (Join-Path $ffmpegRoot "bin/$name") -Destination $buildDir
+        $dll = Join-Path $ffmpegRoot "bin/$name"
+        if (Test-Path -LiteralPath $dll -PathType Leaf) {
+            Copy-Item -LiteralPath $dll -Destination $buildDir -Force
+        }
     }
     # AV1 software decoding is optional at the FFmpeg build level.  When the
     # selected prefix was built with libdav1d, keep its app-local dependency
