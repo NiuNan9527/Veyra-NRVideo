@@ -68,6 +68,10 @@ int wmain(int argc, wchar_t** argv) {
         return 4;
     }
 
+    if (dec.width() <= 0 || dec.height() <= 0) {
+        std::fprintf(stderr, "decoder opened without valid dimensions; stream headers were not recovered\n");
+        return 5;
+    }
     std::printf("decoder: D3D12VA active, %dx%d\n", dec.width(), dec.height());
 
     const auto start = Clock::now();
