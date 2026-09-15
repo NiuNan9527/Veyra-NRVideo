@@ -57,7 +57,7 @@ struct PlayerSnapshot {
     uint64_t previewSkipped=0;
     double playbackSpeed=0;
     bool fgBudgetLimited=false,xessGenerationSuppressed=false;
-    bool running=false,failed=false,image=false,capture=false,remotePlay=false;
+    bool running=false,failed=false,image=false,capture=false,remotePlay=false,lanStream=false;
     int remotePlayState=0; uint64_t remotePlaySkipped=0;
     bool remoteRecovering=false;unsigned remoteReconnectAttempts=0;std::wstring remoteRecoveryMessage;
     remoteplay::SessionInbox::Snapshot remoteStream;
