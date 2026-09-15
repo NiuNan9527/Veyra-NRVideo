@@ -8,6 +8,8 @@ extern "C" {
 }
 
 #include <format>
+#include <chrono>
+#include <thread>
 
 #include "veyra/Log.h"
 #include "veyra/media/InputUrl.h"
@@ -175,6 +177,12 @@ bool FFmpegDemuxer::readVideoPacket(bool& endOfFile)
         if (result == AVERROR_EOF) {
             endOfFile = true;
             return false;
+        }
+        if (result == AVERROR(EAGAIN)) {
+            // Live network protocols may transiently have no packet ready.
+            // Do not convert a harmless would-block into a fatal source error.
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            continue;
         }
         if (result < 0) {
             char errorText[AV_ERROR_MAX_STRING_SIZE]{};
