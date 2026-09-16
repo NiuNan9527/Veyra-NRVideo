@@ -29,7 +29,8 @@ Write-Host "Veyra H.264 AMF UDP timing test -> $TargetIp`:$Port"
     -g 15 `
     -bf 0 `
     -async_depth 1 `
-    -header_insertion_mode idr `
+    -header_spacing 15 `
+    -aud 1 `
     -mpegts_flags +resend_headers `
     -muxdelay 0 `
     -muxpreload 0 `
