@@ -115,6 +115,16 @@ add_library(veyra_ngx STATIC
     VEYRA_EXPERIMENTAL_LOCAL_DLSSNR=1)
 endif()
 
+add_executable(veyra_dxgi_capture_timing_probe
+  tools/dxgi_capture_timing_probe/main.cpp
+)
+veyra_apply_warnings(veyra_dxgi_capture_timing_probe)
+target_compile_options(veyra_dxgi_capture_timing_probe PRIVATE /WX-)
+target_compile_features(veyra_dxgi_capture_timing_probe PRIVATE cxx_std_20)
+target_compile_definitions(veyra_dxgi_capture_timing_probe PRIVATE
+  UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_link_libraries(veyra_dxgi_capture_timing_probe PRIVATE d3d11 dxgi)
+
 add_executable(veyra_runtime_probe
   tools/runtime_probe/main.cpp
 )
