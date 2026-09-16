@@ -383,6 +383,19 @@ if(VEYRA_FFMPEG_ROOT AND EXISTS "${VEYRA_FFMPEG_ROOT}/include/libavformat/avform
   target_link_directories(veyra_media PUBLIC ${FFMPEG_LIBRARY_DIRS})
   target_link_libraries(veyra_media PUBLIC ${FFMPEG_LIBRARIES})
 
+  add_executable(veyra_native_lan_sender
+    tools/native_lan_sender/main.cpp
+  )
+  veyra_apply_warnings(veyra_native_lan_sender)
+  target_compile_options(veyra_native_lan_sender PRIVATE /WX-)
+  target_compile_features(veyra_native_lan_sender PRIVATE cxx_std_20)
+  target_compile_definitions(veyra_native_lan_sender PRIVATE
+    UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+  target_include_directories(veyra_native_lan_sender PRIVATE ${FFMPEG_INCLUDE_DIRS})
+  target_link_directories(veyra_native_lan_sender PRIVATE ${FFMPEG_LIBRARY_DIRS})
+  target_link_libraries(veyra_native_lan_sender PRIVATE
+    ${FFMPEG_LIBRARIES} d3d11 dxgi)
+
   add_executable(veyra_lan_timing_probe
     tools/lan_timing_probe/main.cpp
   )
