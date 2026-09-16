@@ -182,11 +182,12 @@ int wmain(int argc, wchar_t** argv)
     std::printf("Move windows / play motion on this output during the test.\n");
 
     const auto start = Clock::now();
-    auto lastAcquire = Clock::time_point{};
+    auto lastContentAcquire = Clock::time_point{};
     LONGLONG lastPresent = 0;
-    std::vector<double> acquireGaps;
+    std::vector<double> contentAcquireGaps;
     std::vector<double> presentGaps;
-    uint64_t frames = 0;
+    uint64_t callbacks = 0;
+    uint64_t contentFrames = 0;
     uint64_t timeouts = 0;
     uint64_t pointerOnly = 0;
     uint64_t accumulatedExtra = 0;
@@ -208,20 +209,22 @@ int wmain(int argc, wchar_t** argv)
             break;
         }
 
+        ++callbacks;
         const auto now = Clock::now();
-        if (lastAcquire != Clock::time_point{}) {
-            acquireGaps.push_back(durationMs(now - lastAcquire));
-        }
-        lastAcquire = now;
-        ++frames;
-
-        if (info.AccumulatedFrames > 1) accumulatedExtra += (info.AccumulatedFrames - 1);
 
         if (info.LastPresentTime.QuadPart != 0) {
+            if (lastContentAcquire != Clock::time_point{}) {
+                contentAcquireGaps.push_back(durationMs(now - lastContentAcquire));
+            }
+            lastContentAcquire = now;
+            ++contentFrames;
+
             if (lastPresent != 0) {
                 presentGaps.push_back(qpcMs(info.LastPresentTime.QuadPart - lastPresent, freq.QuadPart));
             }
             lastPresent = info.LastPresentTime.QuadPart;
+
+            if (info.AccumulatedFrames > 1) accumulatedExtra += (info.AccumulatedFrames - 1);
         } else {
             ++pointerOnly;
         }
@@ -231,13 +234,17 @@ int wmain(int argc, wchar_t** argv)
 
     const double elapsed = durationMs(Clock::now() - start) / 1000.0;
     std::printf("\nRESULT\n");
-    std::printf("frames=%llu elapsed=%.3fs callbacks_per_sec=%.2f timeouts=%llu pointer_only=%llu accumulated_extra=%llu\n",
-        static_cast<unsigned long long>(frames), elapsed,
-        elapsed > 0.0 ? double(frames) / elapsed : 0.0,
+    std::printf("callbacks=%llu content_frames=%llu elapsed=%.3fs content_fps=%.2f timeouts=%llu pointer_only=%llu accumulated_extra=%llu\n",
+        static_cast<unsigned long long>(callbacks),
+        static_cast<unsigned long long>(contentFrames), elapsed,
+        elapsed > 0.0 ? double(contentFrames) / elapsed : 0.0,
         static_cast<unsigned long long>(timeouts),
         static_cast<unsigned long long>(pointerOnly),
         static_cast<unsigned long long>(accumulatedExtra));
-    printStats("acquire_gap_ms", acquireGaps);
+    printStats("content_acquire_gap_ms", contentAcquireGaps);
     printStats("present_gap_ms", presentGaps);
+    if (contentFrames < static_cast<uint64_t>(seconds * 30)) {
+        std::printf("NOTE: too few content presents for a 60-fps pacing judgement. Keep a game/video continuously moving and keep the mouse still, then rerun.\n");
+    }
     return 0;
 }
