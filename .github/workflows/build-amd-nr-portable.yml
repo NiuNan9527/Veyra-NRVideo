@@ -3,8 +3,6 @@ name: Build AMD NR portable
 on:
   push:
     branches: [amd-nr-v2.0.2]
-    paths-ignore:
-      - ".github/workflows/amd-nr-smoke.yml"
   workflow_dispatch:
 
 jobs:
@@ -105,64 +103,12 @@ jobs:
           New-Item -ItemType Directory -Force $amd | Out-Null
           Copy-Item "out\lmxxf-bin\LmxxfNrRuntime.dll" "$amd\LmxxfNrRuntime.dll" -Force
           Copy-Item "out\lmxxf-src\LICENSE" "$amd\lmxxf-MIT.txt" -Force
-
-          @'
-Veyra 2.0.2 AMD lmxxf NR experimental portable
-
-The MIT lmxxf runtime DLL is included.
-Neural assets/weights are NOT redistributed here.
-
-To enable AMD NR:
-1. Find an existing working dlss5-on-amd package on your PC.
-2. Open its: DLSS5-AMD\native-game-tiled-assets
-3. Copy ALL CONTENTS of native-game-tiled-assets into this folder:
-   runtime\experimental\amd-lmxxf
-   (so this folder contains HIP\SHA256SUMS, .hsaco modules, weights, noise.f32 and codec HLSL files)
-4. Start Veyra-AMD-NR.exe.
-5. In the NR runtime selector choose: AMD RDNA4 · lmxxf.
-6. First test: SDR, one NR layer, strength around 1.0.
-
-This build intentionally does not bundle NVIDIA neural weights.
-'@ | Set-Content "$amd\README_IMPORT_ASSETS.txt" -Encoding utf8
-
-          @'
-@echo off
-chcp 65001 >nul
-set "SRC=%~1"
-if "%SRC%"=="" (
-  echo 请把 native-game-tiled-assets 文件夹拖到这个 BAT 上。
-  pause
-  exit /b 2
-)
-if not exist "%SRC%\HIP\SHA256SUMS" (
-  echo 选错文件夹：找不到 HIP\SHA256SUMS
-  pause
-  exit /b 3
-)
-set "DST=%~dp0runtime\experimental\amd-lmxxf"
-robocopy "%SRC%" "%DST%" /E /R:1 /W:1
-if errorlevel 8 (
-  echo 导入失败。
-  pause
-  exit /b 4
-)
-echo.
-echo AMD NR 资源导入完成。
-echo 现在双击 Veyra-AMD-NR.exe，NR 版本选择 AMD RDNA4 - lmxxf。
-pause
-'@ | Set-Content "$pkg\导入AMD_NR资源.bat" -Encoding ascii
+          Copy-Item "packaging\amd-nr\README_IMPORT_ASSETS.txt" "$amd\README_IMPORT_ASSETS.txt" -Force
+          Copy-Item "packaging\amd-nr\IMPORT_AMD_NR_ASSETS.bat" "$pkg\IMPORT_AMD_NR_ASSETS.bat" -Force
+          Copy-Item "packaging\amd-nr\README_FIRST.txt" "$pkg\README_FIRST.txt" -Force
 
           Copy-Item "LICENSE" "$pkg\LICENSE-Veyra-GPL3.txt" -Force
           if(Test-Path "THIRD_PARTY_NOTICES.md"){ Copy-Item "THIRD_PARTY_NOTICES.md" $pkg -Force }
-          @'
-这是实验性 AMD NR 直用版。
-第一次使用只需要：
-1. 把你现有 AMD DLSS5 包里的 native-game-tiled-assets 文件夹拖到 “导入AMD_NR资源.bat” 上；
-2. 双击 Veyra-AMD-NR.exe；
-3. NR 版本选择 “AMD RDNA4 · lmxxf”。
-建议第一次只开单层 NR、SDR、强度 1.0。
-'@ | Set-Content "$pkg\先看我.txt" -Encoding utf8
-
           Get-ChildItem $pkg | Select-Object Name,Length | Format-Table -AutoSize
 
       - name: Upload direct-use portable
