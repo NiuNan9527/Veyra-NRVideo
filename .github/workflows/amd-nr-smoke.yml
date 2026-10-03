@@ -1,0 +1,29 @@
+name: AMD NR smoke
+
+on:
+  push:
+    branches: [amd-nr-v2.0.2]
+  workflow_dispatch:
+
+jobs:
+  compile-backend:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure backend-only smoke build
+        shell: pwsh
+        run: |
+          cmake -S . -B out/amd-nr-smoke -G Ninja -DCMAKE_BUILD_TYPE=Release -DVEYRA_ENABLE_D3D12_DEBUG=OFF
+
+      - name: Compile AMD NR host and pipeline tests
+        shell: pwsh
+        run: |
+          cmake --build out/amd-nr-smoke --target veyra_pipeline_tests --parallel 2
