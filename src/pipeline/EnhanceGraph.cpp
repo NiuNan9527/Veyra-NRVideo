@@ -2553,7 +2553,6 @@ bool EnhanceGraph::process(const AVFrame* frame, double ptsMs, bool reset, Frame
                 layer->historyValid = true;
                 layer->inputRevision = 1;
             }
-            }
             if (layerIndex + 1 < nrInstances_.size()) compositeNrLayer(layerIndex);
             if(desc_.splitNrAcrossSr()&&desc_.stageMark)desc_.stageMark("nr-layer");
         }
