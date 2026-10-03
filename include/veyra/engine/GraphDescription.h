@@ -36,6 +36,7 @@ struct StageRequest {
     bool stillImage=false;   // image preview/processing: no NR-first order
     bool exportJob=false;    // offline export: native NR size, no present-sink FG, no NR-first order
     bool nvidiaAdapter=true;
+    bool amdAdapter=false;
     const ChainRuntimeOrder* nodeOrder=nullptr; // paired with this settings transaction
 };
 
@@ -80,11 +81,12 @@ inline pipeline::ResolutionPlan describeStages(const StageRequest& request,const
     desc.nrWidth=plan.nr.width;desc.nrHeight=plan.nr.height;
     desc.flowWidth=plan.flow.width;desc.flowHeight=plan.flow.height;
     desc.enableSr=plan.srApplied&&(request.nvidiaAdapter||settings.videoSrQuality==kVideoSrFsr);
-    desc.enableNr=request.nr&&request.nvidiaAdapter&&(!settings.nrLayerCount||settings.activeNrLayerCount()>0);
+    const bool amdLmxxf=request.amdAdapter&&currentNrRuntime(settings.nrRuntime)==NrRuntime::AmdLmxxf;
+    desc.enableNr=request.nr&&(request.nvidiaAdapter||amdLmxxf)&&(!settings.nrLayerCount||settings.activeNrLayerCount()>0);
     desc.nrBeforeSr=!request.stillImage&&!request.exportJob&&lowLatency&&desc.enableNr&&desc.enableSr;
     desc.enableNvofStandalone=desc.enableNr;
     const bool temporalMotion=settings.nrTemporal||std::any_of(settings.nrLayers.begin(),settings.nrLayers.begin()+settings.nrLayerCount,[](const auto& n){return n.enabled&&n.temporal;});
-    desc.enableNvofStandalone=desc.enableNr&&(motionUsesFlow(settings.nrMotion)||temporalMotion);
+    desc.enableNvofStandalone=desc.enableNr&&!amdLmxxf&&(motionUsesFlow(settings.nrMotion)||temporalMotion);
     desc.enableFg=request.fg&&(request.nvidiaAdapter||(!request.exportJob&&crossVendorFrameGeneration(settings.frameGenerationBackend)));
     desc.fgMultiplier=request.fgMultiplier;
     desc.videoSrQuality=settings.videoSrQuality;

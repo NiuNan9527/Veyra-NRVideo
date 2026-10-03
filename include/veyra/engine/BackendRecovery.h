@@ -12,10 +12,11 @@ constexpr const wchar_t* ngxFailureHint(uint64_t result) {
     default:return L"初始化失败；详细原因见诊断日志";
     }
 }
-inline bool disableUnsupportedNvidiaEffects(EnhancementSettings& settings,bool nvidia){
+inline bool disableUnsupportedNvidiaEffects(EnhancementSettings& settings,bool nvidia,bool amd=false){
     if(nvidia)return false;
     const auto before=settings;
-    settings.nr=false;
+    const bool amdLmxxf=amd&&currentNrRuntime(settings.nrRuntime)==NrRuntime::AmdLmxxf;
+    if(!amdLmxxf)settings.nr=false;
     settings.videoHdr.enabled=false;
     // AMD FSR upscaling is vendor neutral and must survive the NVIDIA-only
     // normalization; every other SR backend is NGX-only.

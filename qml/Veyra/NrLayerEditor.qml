@@ -65,12 +65,20 @@ ColumnLayout {
         hint: qsTr("全链共享 · 切换会重建 NR 管线")
         VSelect {
             objectName: "nr-runtime"
-            value: editor.layerData.runtime === 3 ? qsTr("RTX 50 · NVIDIA 原版")
+            value: editor.layerData.runtime === 4 ? qsTr("AMD RDNA4 · lmxxf")
+                   : editor.layerData.runtime === 3 ? qsTr("RTX 50 · NVIDIA 原版")
                    : editor.layerData.runtime === 2 ? "RTX 20–50 · SF-v2" : "RTX 50 · Lecram"
             options: [{id:"0",label:"RTX 50 · Lecram"},{id:"2",label:"RTX 20–50 · SF-v2"},
-                      {id:"3",label:qsTr("RTX 50 · NVIDIA 原版")}]
+                      {id:"3",label:qsTr("RTX 50 · NVIDIA 原版")},{id:"4",label:qsTr("AMD RDNA4 · lmxxf")}]
             onPicked: id => editor.edited(editor.layerData.index, "runtime", Number(id))
         }
+    }
+    Text {
+        Layout.fillWidth: true
+        visible: editor.layerData.runtime === 4
+        text: qsTr("AMD lmxxf v0.1：当前只映射模型强度；局部明暗/结构/肤质/自动遮罩/UI 修正暂不发送给 AMD 后端。")
+        color: Theme.t3; font.family: Theme.fontUi; font.pixelSize: 11
+        wrapMode: Text.WordWrap
     }
     VRow {
         label: qsTr("NR 运动来源")

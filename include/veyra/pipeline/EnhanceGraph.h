@@ -65,6 +65,7 @@ class NvOfSession;
 }
 
 namespace veyra::pipeline {
+class LmxxfNrBackend;
 struct ColorDescription;
 // Decoded-surface view for the D3D11VA ingress (defined in FramePacket.h).
 struct HardwareSurfaceInput;
@@ -486,7 +487,7 @@ public:
     };
     const Metrics& metrics() const { return metrics_; }
     const std::string& mvecSource() const { return mvecSource_; }
-    bool nrCreated() const { return !nrInstances_.empty() && nrInstances_.front()->handle() != nullptr; }
+    bool nrCreated() const { return !nrInstances_.empty() && (amdNrBackend_ != nullptr || nrInstances_.front()->handle() != nullptr); }
     bool initialized() const { return initialized_; }
     uint32_t sourceWidth() const { return srcW_; }
     uint32_t sourceHeight() const { return srcH_; }
@@ -599,6 +600,7 @@ private:
     bool createResources();
     bool initZeroAndDepthTextures();
     bool initNvof();
+    bool initAmdNrFeatures();
     bool initNgxFeatures();
     bool initFsrSr();
     bool initFsrFg();
@@ -750,6 +752,7 @@ private:
     HANDLE nvofOutEvent_ = nullptr;
     std::unique_ptr<ngx::NgxCoreHost> coreHost_;
     std::unique_ptr<ngx::DlssNrRuntimeAdapter> nrAdapter_;
+    std::unique_ptr<LmxxfNrBackend> amdNrBackend_;
     std::unique_ptr<ngx::DlssSrBackend> srBackend_;
     std::unique_ptr<guidance::AmdOpticalFlow> amdOf_;
     std::unique_ptr<guidance::GpuDisOpticalFlow> gpuDis_;

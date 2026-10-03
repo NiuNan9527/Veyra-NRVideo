@@ -360,7 +360,9 @@ add_library(veyra_pipeline STATIC
   src/pipeline/ColorGradeInstance.cpp
   src/pipeline/ColorDetailPass.cpp
   src/pipeline/NrInstance.cpp
+  src/pipeline/LmxxfNrBackend.cpp
 )
+# VEYRA_AMD_LMXXF_NR_V01: dynamic lmxxf host; runtime/assets are user-supplied.
 veyra_apply_warnings(veyra_pipeline)
 # FFmpeg/NVOF headers are third-party: /WX stays off for this target.
 target_compile_options(veyra_pipeline PRIVATE /WX-)
