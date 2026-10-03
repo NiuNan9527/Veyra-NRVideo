@@ -1162,7 +1162,7 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
                     //    settings record.
                     bool rebuild=engine::requiresGraphRebuild(previous,requested)||previousOrder!=requestedOrder;
                     if(gd.hdrOutput!=nextDesc.hdrOutput||
-                       (!nvidiaAdapter&&((next.nr&&!(amdAdapter&&currentNrRuntime(next.nrRuntime)==NrRuntime::AmdLmxxf))||next.sr||(next.fg&&!xessFg)))||
+                       (!nvidiaAdapter&&((next.nr&&!(amdAdapter&&currentNrRuntime(next.settings.nrRuntime)==NrRuntime::AmdLmxxf))||next.sr||(next.fg&&!xessFg)))||
                        gd.enableNr!=nextDesc.enableNr||gd.enableFg!=nextDesc.enableFg||
                        gd.nrBeforeSr!=nextDesc.nrBeforeSr||
                        gd.workWidth!=nextDesc.workWidth||gd.workHeight!=nextDesc.workHeight||
@@ -1188,7 +1188,7 @@ void EngineController::run(HWND window,std::wstring path,PlayerOptions options,s
                         }
                         options=next;gd=nextDesc;transaction=true;reset=true;
                         resetRecord->epoch=0;
-                        const bool nextAmdNr=amdAdapter&&next.nr&&currentNrRuntime(next.nrRuntime)==NrRuntime::AmdLmxxf;
+                        const bool nextAmdNr=amdAdapter&&next.nr&&currentNrRuntime(next.settings.nrRuntime)==NrRuntime::AmdLmxxf;
                         if(!nvidiaAdapter&&((next.nr&&!nextAmdNr)||next.sr||(next.fg&&!xessFg)))veyra::log::warn("capability",std::format("non-NVIDIA adapter normalized requested settings revision={} nr={} amdNr={} sr={} fgBackend={} flowBackend={}",requested.revision,next.nr,nextAmdNr,next.sr,frameGenerationBackendName(requested.frameGenerationBackend),opticalFlowBackendName(requested.opticalFlowBackend)));
                     }
                     else {
