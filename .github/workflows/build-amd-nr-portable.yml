@@ -41,7 +41,7 @@ jobs:
           git clone https://github.com/microsoft/vcpkg.git C:\veyra-vcpkg
           git -C C:\veyra-vcpkg checkout 36677bbd0b3bf11da7376e62e14bffcc54d2eaeb
           & C:\veyra-vcpkg\bootstrap-vcpkg.bat -disableMetrics
-          & C:\veyra-vcpkg\vcpkg.exe install "ffmpeg[core,avcodec,avformat,swresample,swscale,dav1d]:x64-windows"
+          & C:\veyra-vcpkg\vcpkg.exe install --classic "ffmpeg[core,avcodec,avformat,swresample,swscale,dav1d]:x64-windows"
           "FFMPEG_ROOT=C:\veyra-vcpkg\installed\x64-windows" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Build lmxxf runtime DLL
