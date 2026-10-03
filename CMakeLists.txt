@@ -1255,14 +1255,16 @@ if(TARGET veyra_qml_ui)
 endif()
 configure_file(apps/veyra/resource.h ${CMAKE_CURRENT_BINARY_DIR}/veyra-resource.h COPYONLY)
 configure_file(assets/veyra.ico ${CMAKE_CURRENT_BINARY_DIR}/veyra.ico COPYONLY)
-target_sources(veyra PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/veyra-version.rc)
+if(TARGET veyra)
+  target_sources(veyra PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/veyra-version.rc)
+  target_link_options(veyra PRIVATE "/MANIFESTINPUT:${CMAKE_CURRENT_SOURCE_DIR}/apps/veyra/veyra.manifest")
+endif()
 set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/veyra-version.rc PROPERTIES
   OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/veyra.ico;${CMAKE_CURRENT_SOURCE_DIR}/apps/veyra/resource.h")
 if(TARGET veyra_qml_ui)
   set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/veyra-qml-version.rc PROPERTIES
     OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/veyra.ico;${CMAKE_CURRENT_SOURCE_DIR}/apps/veyra/resource.h")
 endif()
-target_link_options(veyra PRIVATE "/MANIFESTINPUT:${CMAKE_CURRENT_SOURCE_DIR}/apps/veyra/veyra.manifest")
 # P4-c: the QML front end hosts the same layered child subtitle window.
 if(TARGET veyra_qml_ui)
   # Copied next to the link step and named relatively: a short link line keeps
